@@ -1,18 +1,29 @@
 package com.example.easygoodeats
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.text.HtmlCompat
 import coil.compose.AsyncImage
 import com.example.easygoodeats.api.RetrofitClient
@@ -54,7 +65,7 @@ fun RecipeDetailScreen(
             },
             title = { Text(if (selectedDay == null) "Add to Meal Plan" else "Select Meal Type") },
             text = {
-                Column {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     if (selectedDay == null) {
                         viewModel.daysOfWeek.forEach { day ->
                             TextButton(
@@ -158,7 +169,8 @@ fun RecipeDetailScreen(
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
                                     text = r.title,
-                                    style = MaterialTheme.typography.headlineSmall
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -169,6 +181,50 @@ fun RecipeDetailScreen(
                                 }
                             }
                         }
+
+                        // Nutrition Section
+                        r.nutrition?.let { nutrition ->
+                            item {
+                                Text(
+                                    text = "Nutrition Per Serving",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                )
+                                LazyRow(
+                                    contentPadding = PaddingValues(horizontal = 16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    val mainNutrients = listOf("Calories", "Fat", "Protein", "Carbohydrates")
+                                    val filtered = nutrition.nutrients.filter { it.name in mainNutrients }
+                                    items(filtered) { nutrient ->
+                                        Card(
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                            ),
+                                            shape = RoundedCornerShape(12.dp)
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.padding(12.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Text(
+                                                    text = "${nutrient.amount.toInt()}${nutrient.unit}",
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                Text(
+                                                    text = nutrient.name,
+                                                    style = MaterialTheme.typography.labelSmall
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+                        }
+
                         if (r.ingredients.isNotEmpty()) {
                             item {
                                 Text(
@@ -179,14 +235,119 @@ fun RecipeDetailScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
                             items(r.ingredients) { ingredient ->
-                                Text(
-                                    text = "• ${ingredient.original}",
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(6.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.primary)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = ingredient.original,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
                             }
                         }
-                        if (r.instructions.isNotBlank()) {
+
+                        // Equipment Section
+                        val allEquipment = r.analyzedInstructions.flatMap { it.steps }.flatMap { it.equipment }.distinctBy { it.name }
+                        if (allEquipment.isNotEmpty()) {
+                            item {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "Equipment Needed",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    modifier = Modifier.padding(horizontal = 16.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                LazyRow(
+                                    contentPadding = PaddingValues(horizontal = 16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    items(allEquipment) { equipment ->
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(60.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                AsyncImage(
+                                                    model = "https://spoonacular.com/cdn/equipment_100x100/${equipment.image}",
+                                                    contentDescription = equipment.name,
+                                                    modifier = Modifier.size(45.dp)
+                                                )
+                                            }
+                                            Text(
+                                                text = equipment.name,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                modifier = Modifier.widthIn(max = 70.dp),
+                                                maxLines = 1
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Analyzed Instructions Section
+                        if (r.analyzedInstructions.isNotEmpty()) {
+                            item {
+                                Spacer(modifier = Modifier.height(24.dp))
+                                Text(
+                                    text = "Instructions",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    modifier = Modifier.padding(horizontal = 16.dp)
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+
+                            r.analyzedInstructions.forEach { instruction ->
+                                if (instruction.name.isNotBlank()) {
+                                    item {
+                                        Text(
+                                            text = instruction.name,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                        )
+                                    }
+                                }
+                                items(instruction.steps) { step ->
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = MaterialTheme.colorScheme.surface
+                                        ),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                    ) {
+                                        Row(modifier = Modifier.padding(12.dp)) {
+                                            Text(
+                                                text = "${step.number}",
+                                                style = MaterialTheme.typography.titleLarge,
+                                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.width(30.dp)
+                                            )
+                                            Text(
+                                                text = step.step,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                lineHeight = 20.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (r.instructions.isNotBlank()) {
+                            // Fallback to HTML instructions if analyzed ones are missing
                             item {
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
@@ -203,8 +364,11 @@ fun RecipeDetailScreen(
                                     modifier = Modifier.padding(horizontal = 16.dp),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
-                                Spacer(modifier = Modifier.height(80.dp)) // Extra space for FAB
                             }
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(100.dp)) // Extra space for FAB
                         }
                     }
                 }

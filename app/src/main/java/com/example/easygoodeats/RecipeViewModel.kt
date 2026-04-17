@@ -1,6 +1,9 @@
 package com.example.easygoodeats
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.easygoodeats.data.api.Recipe
 
@@ -10,6 +13,10 @@ data class PlannedMeal(
 )
 
 class RecipeViewModel : ViewModel() {
+    // App Preferences
+    var isDarkMode by mutableStateOf(false)
+    var useMetricSystem by mutableStateOf(false)
+
     // Saved Recipes
     private val _savedRecipes = mutableStateListOf<Recipe>()
     val savedRecipes: List<Recipe> get() = _savedRecipes
@@ -23,6 +30,10 @@ class RecipeViewModel : ViewModel() {
     }
 
     fun isSaved(recipeId: Int): Boolean = _savedRecipes.any { it.id == recipeId }
+
+    fun clearSavedRecipes() {
+        _savedRecipes.clear()
+    }
 
     // Meal Plan: Day -> List of PlannedMeals
     private val _mealPlan = mutableMapOf<String, MutableList<PlannedMeal>>()
@@ -46,5 +57,9 @@ class RecipeViewModel : ViewModel() {
 
     fun removeFromMealPlan(day: String, recipeId: Int, mealType: String) {
         _mealPlan[day]?.removeAll { it.recipe.id == recipeId && it.mealType == mealType }
+    }
+
+    fun resetMealPlan() {
+        daysOfWeek.forEach { _mealPlan[it]?.clear() }
     }
 }

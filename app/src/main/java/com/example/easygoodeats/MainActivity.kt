@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
@@ -22,61 +23,69 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            EasyGoodEatsTheme {
-                MainScreen()
+            val viewModel: RecipeViewModel = viewModel()
+            // Link the app theme to the ViewModel's dark mode state
+            EasyGoodEatsTheme(darkTheme = viewModel.isDarkMode) {
+                MainScreen(viewModel)
             }
         }
     }
 }
 
 @Composable
-fun MainScreen(viewModel: RecipeViewModel = viewModel()) {
+fun MainScreen(viewModel: RecipeViewModel) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var selectedRecipeId by remember { mutableStateOf<Int?>(null) }
 
-    if (selectedRecipeId != null) {
-        RecipeDetailScreen(
-            recipeId = selectedRecipeId!!,
-            viewModel = viewModel,
-            onBack = { selectedRecipeId = null }
-        )
-    } else {
-        Scaffold(
-            bottomBar = {
-                NavigationBar {
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Filled.Home, contentDescription = "Search") },
-                        label = { Text("Search") },
-                        selected = selectedTab == 0,
-                        onClick = { selectedTab = 0 }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Filled.Favorite, contentDescription = "Saved") },
-                        label = { Text("Saved") },
-                        selected = selectedTab == 1,
-                        onClick = { selectedTab = 1 }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Filled.DateRange, contentDescription = "Planner") },
-                        label = { Text("Planner") },
-                        selected = selectedTab == 2,
-                        onClick = { selectedTab = 2 }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
-                        label = { Text("Settings") },
-                        selected = selectedTab == 3,
-                        onClick = { selectedTab = 3 }
-                    )
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        if (selectedRecipeId != null) {
+            RecipeDetailScreen(
+                recipeId = selectedRecipeId!!,
+                viewModel = viewModel,
+                onBack = { selectedRecipeId = null }
+            )
+        } else {
+            Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                bottomBar = {
+                    NavigationBar {
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Filled.Home, contentDescription = "Search") },
+                            label = { Text("Search") },
+                            selected = selectedTab == 0,
+                            onClick = { selectedTab = 0 }
+                        )
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Filled.Favorite, contentDescription = "Saved") },
+                            label = { Text("Saved") },
+                            selected = selectedTab == 1,
+                            onClick = { selectedTab = 1 }
+                        )
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Filled.DateRange, contentDescription = "Planner") },
+                            label = { Text("Planner") },
+                            selected = selectedTab == 2,
+                            onClick = { selectedTab = 2 }
+                        )
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
+                            label = { Text("Settings") },
+                            selected = selectedTab == 3,
+                            onClick = { selectedTab = 3 }
+                        )
+                    }
                 }
-            }
-        ) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
-                when (selectedTab) {
-                    0 -> SearchScreen(onRecipeClick = { id -> selectedRecipeId = id })
-                    1 -> SavedScreen(viewModel = viewModel, onRecipeClick = { id -> selectedRecipeId = id })
-                    2 -> PlannerScreen(viewModel = viewModel, onRecipeClick = { id -> selectedRecipeId = id })
-                    3 -> SettingsScreen()
+            ) { innerPadding ->
+                Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                    when (selectedTab) {
+                        0 -> SearchScreen(onRecipeClick = { id -> selectedRecipeId = id })
+                        1 -> SavedScreen(viewModel = viewModel, onRecipeClick = { id -> selectedRecipeId = id })
+                        2 -> PlannerScreen(viewModel = viewModel, onRecipeClick = { id -> selectedRecipeId = id })
+                        3 -> SettingsScreen(viewModel = viewModel)
+                    }
                 }
             }
         }

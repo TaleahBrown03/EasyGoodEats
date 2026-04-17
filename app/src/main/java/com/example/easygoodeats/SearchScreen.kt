@@ -103,24 +103,6 @@ fun SearchScreen(onRecipeClick: (Int) -> Unit) {
         }
 
         item {
-            AnimatedVisibility(visible = showFilters) {
-                Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    FilterSection(title = "Diet", options = diets, selected = selectedDiet, onSelected = { selectedDiet = if (selectedDiet == it) null else it })
-                    FilterSection(title = "Cuisine", options = cuisines, selected = selectedCuisine, onSelected = { selectedCuisine = if (selectedCuisine == it) null else it })
-                    FilterSection(title = "Meal Type", options = mealTypes, selected = selectedType, onSelected = { selectedType = if (selectedType == it) null else it })
-
-                    Text("Max Time: ${maxTime.toInt()} min", style = MaterialTheme.typography.labelLarge)
-                    Slider(
-                        value = maxTime,
-                        onValueChange = { maxTime = it },
-                        valueRange = 10f..180f,
-                        steps = 17
-                    )
-                }
-            }
-        }
-
-        item {
             Button(
                 onClick = {
                     isLoading = true
@@ -151,6 +133,24 @@ fun SearchScreen(onRecipeClick: (Int) -> Unit) {
             }
         }
 
+        item {
+            AnimatedVisibility(visible = showFilters) {
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    FilterSection(title = "Diet", options = diets, selected = selectedDiet, onSelected = { selectedDiet = if (selectedDiet == it) null else it })
+                    FilterSection(title = "Cuisine", options = cuisines, selected = selectedCuisine, onSelected = { selectedCuisine = if (selectedCuisine == it) null else it })
+                    FilterSection(title = "Meal Type", options = mealTypes, selected = selectedType, onSelected = { selectedType = if (selectedType == it) null else it })
+
+                    Text("Max Time: ${maxTime.toInt()} min", style = MaterialTheme.typography.labelLarge)
+                    Slider(
+                        value = maxTime,
+                        onValueChange = { maxTime = it },
+                        valueRange = 10f..180f,
+                        steps = 17
+                    )
+                }
+            }
+        }
+
         if (isLoading) {
             item {
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -171,7 +171,6 @@ fun SearchScreen(onRecipeClick: (Int) -> Unit) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FilterSection(
     title: String,
@@ -181,11 +180,12 @@ fun FilterSection(
 ) {
     Column(modifier = Modifier.padding(vertical = 4.dp)) {
         Text(text = title, style = MaterialTheme.typography.titleSmall)
-        FlowRow(
+        LazyRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(vertical = 4.dp)
         ) {
-            options.forEach { option ->
+            items(options) { option ->
                 FilterChip(
                     selected = selected == option,
                     onClick = { onSelected(option) },

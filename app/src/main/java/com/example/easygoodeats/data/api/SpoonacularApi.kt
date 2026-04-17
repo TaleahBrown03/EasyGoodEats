@@ -16,12 +16,14 @@ interface SpoonacularApi {
         @Query("maxReadyTime")         maxReadyTime: Int? = null,
         @Query("number")               number: Int = 20,
         @Query("addRecipeInformation") addInfo: Boolean = true,
+        @Query("addRecipeNutrition")   addNutrition: Boolean = true,
         @Query("apiKey")               apiKey: String
     ): RecipeSearchResponse
 
     @GET("recipes/{id}/information")
     suspend fun getRecipeById(
         @Path("id")      id: Int,
+        @Query("includeNutrition") includeNutrition: Boolean = true,
         @Query("apiKey") apiKey: String
     ): Recipe
 }
