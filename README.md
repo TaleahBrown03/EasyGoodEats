@@ -37,4 +37,4 @@ The app follows a structured 4-tab navigation layout:
 * **Settings Tab:** A clean list of preferences and account data management tools.
 
 ---
-*Developed for the Fall 2024 Term.*
+*Developed for the Spring 2026 Term.*
