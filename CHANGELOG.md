@@ -2,7 +2,7 @@
 
 All notable changes to the **Easy Good Eats** project will be documented in this file.
 
-## [1.0.0] - 2024-11-06
+## [1.0.0] - 2026-03-25
 
 ### Added
 - Created initial `README.md` with project description, functionality, and platform details.
