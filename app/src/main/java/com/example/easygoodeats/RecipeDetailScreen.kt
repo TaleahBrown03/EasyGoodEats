@@ -1,5 +1,8 @@
 package com.example.easygoodeats
 
+import android.media.AudioManager
+import android.media.ToneGenerator
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,6 +46,9 @@ fun RecipeDetailScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showMealPlanDialog by remember { mutableStateOf(false) }
     var selectedDay by remember { mutableStateOf<String?>(null) }
+    
+    // Sound Generator
+    val toneGenerator = remember { ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100) }
 
     LaunchedEffect(recipeId) {
         isLoading = true
@@ -82,6 +90,8 @@ fun RecipeDetailScreen(
                                     viewModel.addToMealPlan(selectedDay!!, type, recipe!!)
                                     showMealPlanDialog = false
                                     selectedDay = null
+                                    // Play sound feedback
+                                    toneGenerator.startTone(ToneGenerator.TONE_PROP_ACK, 200)
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
@@ -114,7 +124,11 @@ fun RecipeDetailScreen(
                 actions = {
                     recipe?.let { r ->
                         val isSaved = viewModel.isSaved(r.id)
-                        IconButton(onClick = { viewModel.toggleSave(r) }) {
+                        IconButton(onClick = { 
+                            viewModel.toggleSave(r)
+                            // Play sound feedback
+                            toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 150)
+                        }) {
                             Icon(
                                 imageVector = if (isSaved) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                                 contentDescription = "Save",
@@ -167,11 +181,37 @@ fun RecipeDetailScreen(
                         }
                         item {
                             Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    text = r.title,
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = r.title,
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    
+                                    // CANVAS COMPONENT: Simple decorative star/shape
+                                    Canvas(modifier = Modifier.size(40.dp).padding(4.dp)) {
+                                        val path = Path().apply {
+                                            moveTo(size.width / 2, 0f)
+                                            lineTo(size.width * 0.6f, size.height * 0.4f)
+                                            lineTo(size.width, size.height * 0.4f)
+                                            lineTo(size.width * 0.7f, size.height * 0.6f)
+                                            lineTo(size.width * 0.8f, size.height)
+                                            lineTo(size.width / 2, size.height * 0.8f)
+                                            lineTo(size.width * 0.2f, size.height)
+                                            lineTo(size.width * 0.3f, size.height * 0.6f)
+                                            lineTo(0f, size.height * 0.4f)
+                                            lineTo(size.width * 0.4f, size.height * 0.4f)
+                                            close()
+                                        }
+                                        drawPath(path, color = Color(0xFFFFD700), style = Fill)
+                                    }
+                                }
+
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                                     Text("⏱ ${r.readyInMinutes} min",
