@@ -39,7 +39,7 @@ fun SearchScreen(onRecipeClick: (Int) -> Unit) {
 
     val diets = listOf("Gluten Free", "Ketogenic", "Vegetarian", "Vegan", "Pescetarian", "Paleo")
     val cuisines = listOf("Italian", "Mexican", "Chinese", "Indian", "Japanese", "French", "American")
-    val mealTypes = listOf("breakfast", "lunch", "dinner", "main course", "side dish", "dessert")
+    val mealTypes = listOf("breakfast", "main course", "side dish", "dessert", "appetizer", "salad")
 
     val cookingImages = listOf(
         "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=500&q=60",
@@ -110,7 +110,7 @@ fun SearchScreen(onRecipeClick: (Int) -> Unit) {
                     scope.launch {
                         try {
                             val response = RetrofitClient.api.searchRecipes(
-                                query = query,
+                                query = if (selectedType == "breakfast" && query.isBlank()) "breakfast" else query,
                                 diet = selectedDiet?.lowercase(),
                                 cuisine = selectedCuisine?.lowercase(),
                                 type = selectedType?.lowercase(),
